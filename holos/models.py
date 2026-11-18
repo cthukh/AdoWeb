@@ -9,7 +9,6 @@ class Generacion(models.Model):
         return f"gen - {self.nombre}"
 
 class Holomem(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nombre = models.CharField(max_length=100, verbose_name='Nombre')
     descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
     cant_seguidores = models.IntegerField(verbose_name='Cantidad seguidores YouTube')

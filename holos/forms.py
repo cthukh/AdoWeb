@@ -1,5 +1,6 @@
 from django import forms
-from .models import Holomem 
+from .models import Holomem
+
 
 class HolomemForm(forms.ModelForm):
     class Meta:
@@ -15,22 +16,26 @@ class HolomemForm(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={
                 'class': 'form-control',
-                #'placeholder': 'Ej: Don Quijote de la Mancha',
+                'placeholder': 'Ej: Hoshimachi Suisei',
             }),
-            'descripcion': forms.TextInput(attrs={
-                'class': 'form-control', 
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Una breve descripción del talento',
             }),
             'cant_seguidores': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Cantidad de seguidores en YouTube'
+                'placeholder': 'Cantidad de seguidores en YouTube Ej: 2.930.000',
+                'min': '0',
             }),
-            'fecha_debut': forms.DateInput(attrs={
+            'fecha_debut': forms.DateInput(format='%Y-%m-%d', attrs={
                 'class': 'form-control',
+                'type': 'date',
             }),
             'activo': forms.CheckboxInput(attrs={
                 'class': 'form-check-input',
             }),
             'generacion': forms.Select(attrs={
                 'class': 'form-select',
-            })
+            }),
         }

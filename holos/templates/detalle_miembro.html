@@ -1,10 +1,62 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}
-Detalle de miembro
-{% endblock %}
-
+{% block title %}{{ holo.nombre }}{% endblock %}
 
 {% block content %}
+<main class="member-detail-page">
+	<div class="container">
+		<div class="member-detail-actions">
+			<a class="detail-back-link" href="{% url 'home' %}">
+				<span aria-hidden="true">←</span> Volver a la lista
+			</a>
+			{% if user.is_authenticated %}
+			<a class="btn btn-cancel" href="{% url 'editar_miembro' holo.id %}">Editar</a>
+			<a class="btn btn-danger-outline" href="{% url 'eliminar_miembro' holo.id %}">Eliminar</a>
+			{% endif %}
+		</div>
 
+		<article class="member-detail-card member-card{% if not holo.activo %} is-inactive{% endif %}{% if holo.generacion %} gen-{{ holo.generacion.nombre|slugify }}{% else %} gen-default{% endif %}" aria-labelledby="member-detail-title">
+			<header class="member-detail-heading">
+				<div class="member-detail-avatar member-avatar" aria-hidden="true">{{ holo.nombre|slice:":1"|upper }}</div>
+				<div class="member-detail-identity">
+					<p class="eyebrow mb-2">Talento en escena</p>
+					<h1 class="member-detail-name" id="member-detail-title">{{ holo.nombre }}</h1>
+					<div class="d-flex flex-wrap align-items-center gap-2">
+						{% if holo.generacion %}
+						<span class="member-generation">{{ holo.generacion.nombre }}</span>
+						{% else %}
+						<span class="member-generation">Sin generación asignada</span>
+						{% endif %}
+						{% if holo.activo %}
+						<span class="badge rounded-pill status-badge status-active">Activo</span>
+						{% else %}
+						<span class="badge rounded-pill status-badge status-inactive">Inactivo</span>
+						{% endif %}
+					</div>
+				</div>
+			</header>
+
+			<section class="member-detail-stats" aria-label="Datos del miembro">
+				<div class="member-detail-stat">
+					<span class="detail-label">Seguidores en YouTube</span>
+					<strong class="detail-value followers-value">{{ holo.cant_seguidores|default:0|intcomma }}</strong>
+				</div>
+				<div class="member-detail-stat">
+					<span class="detail-label">Fecha de debut</span>
+					<strong class="detail-value">{{ holo.fecha_debut|date:"d M Y" }}</strong>
+				</div>
+			</section>
+
+			<section class="member-detail-description" aria-labelledby="description-title">
+				<h2 class="detail-section-title" id="description-title">Sobre {{ holo.nombre }}</h2>
+				{% if holo.descripcion %}
+				<p class="mb-0">{{ holo.descripcion|linebreaksbr }}</p>
+				{% else %}
+				<p class="member-description-empty mb-0">Todavía no hay una descripción para este talento.</p>
+				{% endif %}
+			</section>
+		</article>
+	</div>
+</main>
 {% endblock %}

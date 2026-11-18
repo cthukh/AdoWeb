@@ -1,10 +1,137 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
 
-{% block title %}
-Lista de vtubers
-{% endblock %}
-
+{% block title %}Holomiembros{% endblock %}
 
 {% block content %}
-<p>hola mundo</p>
+<main id="inicio">
+	<!-- Presentación y resumen de la comunidad -->
+	<section class="intro-section py-5" aria-labelledby="page-heading">
+		<div class="container py-lg-3">
+			<div class="row align-items-end gy-4">
+				<div class="col-12 col-lg-7">
+					<p class="eyebrow hero-kicker mb-3">El escenario está encendido</p>
+					<h1 class="hero-title mb-3" id="page-heading">Las estrellas de <span class="title-accent">Hololive</span></h1>
+					<p class="hero-copy text-muted-custom mb-0">Talento, personajes inolvidables y una comunidad que brilla en cada presentación. Descubre a las voces que hacen único este escenario.</p>
+				</div>
+				<div class="col-12 col-lg-5">
+					<div class="row g-3" aria-label="Estadísticas del directorio">
+						<div class="col-6">
+							<div class="stat-panel">
+								<div class="d-flex justify-content-between align-items-center mb-3"><span class="stat-label">Activos</span><span class="stat-icon" aria-hidden="true">✦</span></div>
+								<div class="stat-value">{{ activos|length }}</div>
+								<div class="stat-label mt-2">Holomiembros</div>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="stat-panel stat-panel-active">
+								<div class="d-flex justify-content-between align-items-center mb-3"><span class="stat-label">Inactivos</span><span class="stat-icon" aria-hidden="true">♥</span></div>
+								<div class="stat-value" id="inactive-count" data-total="{{ total_holomems }}" data-active="{{ activos|length }}">0</div>
+								<div class="stat-label mt-2">Holomiembros</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Directorio de miembros -->
+	<section class="container members-section" id="miembros" aria-labelledby="members-heading">
+		<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-2 mb-3">
+			<div>
+				<p class="eyebrow mb-1">Conoce a tu oshi</p>
+				<h2 class="h3 section-title mb-0" id="members-heading">Talento en escena</h2>
+			</div>
+			<p class="results-count mb-0" id="results-count" aria-live="polite">{{ total_holomems }} miembros</p>
+		</div>
+		<div class="generation-filters mb-3" role="group" aria-label="Filtrar miembros por generación">
+			<button class="filter-chip" type="button" data-generation-filter="all" aria-pressed="true">Todas <span class="filter-count">{{ total_holomems }}</span></button>
+			{% for generacion in generaciones %}
+			<button class="filter-chip" type="button" data-generation-filter="{{ generacion.id }}" aria-pressed="false">{{ generacion.nombre }} <span class="filter-count">{{ generacion.holomiembros.count }}</span></button>
+			{% endfor %}
+		</div>
+
+		<div class="row g-3 g-lg-4">
+			{% for miembro in holomems %}
+			<div class="col-12 col-md-6 col-lg-4 member-column" data-generation="{{ miembro.generacion_id|default:'none' }}">
+				<a class="member-card-link" href="{% url 'detalle_miembro' miembro.id %}" aria-label="Ver detalle de {{ miembro.nombre }}">
+				<article class="member-card{% if not miembro.activo %} is-inactive{% endif %}{% if miembro.generacion %} gen-{{ miembro.generacion.nombre|slugify }}{% else %} gen-default{% endif %}">
+					<div class="member-card-content">
+					<div class="d-flex align-items-start gap-3">
+						<div class="member-avatar" aria-hidden="true">{{ miembro.nombre|slice:":1"|upper }}</div>
+						<div class="flex-grow-1 min-w-0">
+							<h3 class="member-name mb-1">{{ miembro.nombre }}</h3>
+							{% if miembro.generacion %}
+							<p class="member-generation mb-2">{{ miembro.generacion.nombre }}</p>
+							{% else %}
+							<p class="member-generation mb-2">Sin generación</p>
+							{% endif %}
+							{% if miembro.activo %}
+							<span class="badge rounded-pill status-badge status-active">Activo</span>
+							{% else %}
+							<span class="badge rounded-pill status-badge status-inactive">Inactivo</span>
+							{% endif %}
+						</div>
+					</div>
+
+					<div class="member-details row g-3 mt-3 pt-3">
+						<div class="col-6">
+							<div class="detail-label">Seguidores en YouTube</div>
+							<div class="detail-value followers-value">{{ miembro.cant_seguidores|default:0|intcomma }}</div>
+						</div>
+						<div class="col-6">
+							<div class="detail-label">Fecha de debut</div>
+							<div class="detail-value">{{ miembro.fecha_debut|date:"d M Y" }}</div>
+						</div>
+					</div>
+
+					{% if miembro.descripcion %}
+					<p class="member-description mb-0 mt-3">{{ miembro.descripcion|truncatewords:24 }}</p>
+					{% endif %}
+					</div>
+				</article>
+				</a>
+			</div>
+			{% empty %}
+			<div class="col-12">
+				<div class="empty-state text-center">
+					<div class="empty-sparkle" aria-hidden="true">✧</div>
+					<h3 class="h5 section-title">Aún no se encienden las luces</h3>
+					<p class="text-muted-custom mb-0">Cuando haya miembros en escena, los encontrarás aquí.</p>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const filters = document.querySelectorAll('[data-generation-filter]');
+		const members = document.querySelectorAll('.member-column');
+		const resultCount = document.getElementById('results-count');
+		const inactiveCount = document.getElementById('inactive-count');
+		inactiveCount.textContent = Number(inactiveCount.dataset.total) - Number(inactiveCount.dataset.active);
+
+		filters.forEach((filter) => {
+			filter.addEventListener('click', () => {
+				const selectedGeneration = filter.dataset.generationFilter;
+				let visibleCount = 0;
+
+				filters.forEach((chip) => chip.setAttribute('aria-pressed', String(chip === filter)));
+				members.forEach((member) => {
+					const isVisible = selectedGeneration === 'all' || member.dataset.generation === selectedGeneration;
+					member.hidden = !isVisible;
+					if (isVisible) visibleCount += 1;
+				});
+
+				resultCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'miembro' : 'miembros'}`;
+			});
+		});
+	});
+</script>
 {% endblock %}
